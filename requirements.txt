@@ -12,3 +12,6 @@ twint
 tweepy
 fastapi
 uvicorn
+lime
+plotly
+pyyaml==5.4.1

@@ -16,6 +16,8 @@ import tensorflow_hub as hub
 import ftfy
 import tensorflow_text as text
 from official.nlp import optimization
+from lime.lime_text import LimeTextExplainer
+import numpy as np
 
 model = tf.keras.models.load_model('albert_depression_tweets_classifier.h5', custom_objects={'KerasLayer':hub.KerasLayer}, compile=False)
 
@@ -187,6 +189,22 @@ def clean_tweets(tweets):
 
     return cleaned_tweets
 
+def predict_proba(text):
+  if(type(text)==str):
+    probs = model.predict([text])
+  else:
+    probs = model.predict(text)
+  neg_probs = 1-probs
+  probs = probs.reshape((probs.shape[0]))
+  neg_probs = neg_probs.reshape((probs.shape[0]))
+
+  res = np.zeros((probs.shape[0],2))
+
+  res[:, 0] = neg_probs
+  res[:, 1] = probs
+
+  return res
+
 import uvicorn
 from fastapi import FastAPI
 
@@ -207,3 +225,10 @@ def predict_sentiment(text:str):
             "confidence": pred_sentiment.item()
             }
   return result
+
+# @app.get('/explanation')
+# def get_explanations(text:str):
+#   explainer = LimeTextExplainer(class_names=['not depressed', 'depressed'])
+#   exp = explainer.explain_instance(text, predict_proba, labels = (1,), num_features=6, num_samples=200)
+#   as_list = exp.as_list()
+#   return {'explanation': as_list}

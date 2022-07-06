@@ -1,23 +1,28 @@
 import streamlit as st 
 import altair as alt
-# import plotly.express as px 
 import requests
 
 # EDA Pkgs
 import pandas as pd 
 import numpy as np 
 from datetime import datetime
+import plotly.graph_objects as go
 
 # Fxn
 def predict_emotions(text, api_url = "http://localhost:8000/predict"):
   results = requests.get(api_url, params={'text': text})
-  # print(results)
   results = results.json()
   return results
 
-# def get_prediction_proba(docx):
-# 	results = pipe_lr.predict_proba([docx])
-# 	return results
+def get_explanations(text, api_url = "http://localhost:8000/explanation"):
+  exp_json = requests.get(api_url, params={'text': text})
+  exp_as_list = exp_json.json()
+  words = list()
+  weights = list()
+  for pair in exp_as_list:
+    words.append(pair[0])
+    weights.append(pair[1])
+  return words, weights
 
 # Main Application
 def main():
@@ -25,21 +30,20 @@ def main():
   menu = ["Home","About"]
   choice = st.sidebar.selectbox("Menu",menu)
   if choice == "Home":
-    st.subheader("Home-Depression In Tweets")
+    st.subheader("Home\nDepression In Tweets")
 
-    with st.form(key='emotion_clf_form'):
+    with st.form(key='depression_clf_form'):
       raw_text = st.text_area("tweet")
       submit_text = st.form_submit_button(label='Submit')
+      # exp_button = st.form_submit_button(label = "Submit and Get Explanations")
 
     if submit_text:
-      col1, col2 = st.beta_columns(2)
+      col1, col2 = st.columns(2)
 
-      # Apply Fxn Here
       results = predict_emotions(raw_text)
       prediction = results["prediction"]
       probability = results["confidence"]
-      
-      # add_prediction_details(raw_text,prediction,np.max(probability),datetime.now())
+
       with col1:
         st.success("Original Text")
         st.write(raw_text)
@@ -49,6 +53,16 @@ def main():
 
         st.success("Probability")
         st.write(probability)
+
+      # with col2:
+      #   if exp_button:
+      #     words, weights = get_explanations(raw_text)
+      #     st.success("Explanation")
+      #     fig = go.Figure(go.Bar(
+      #       x=weights,
+      #       y=words,
+      #       orientation='h'))
+      #     st.plotly_chart(fig, use_container_width=True)
 
   else:
     st.subheader(f"About, {datetime.now()}")
