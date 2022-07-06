@@ -7,23 +7,25 @@ Original file is located at
     https://colab.research.google.com/drive/1rZ-q3LslmOZr6aJfIkQj3MpX9AmgLX3g
 """
 
-from google.colab import drive
-drive.mount('/content/gdrive')
+# from google.colab import drive
+# drive.mount('/content/gdrive')
 
-!pip install tf-models-official ftfy tensorflow-hub tensorflow-text
-
+from sys import excepthook
 import tensorflow as tf
 import tensorflow_hub as hub
 import ftfy
 import tensorflow_text as text
 from official.nlp import optimization
 
-model = tf.keras.models.load_model('gdrive/MyDrive/705/albert_depression_tweets_classifier.h5', custom_objects={'KerasLayer':hub.KerasLayer}, compile=False)
+model = tf.keras.models.load_model('albert_depression_tweets_classifier.h5', custom_objects={'KerasLayer':hub.KerasLayer}, compile=False)
 
 import re
 import nltk
 from nltk.corpus import stopwords
 from nltk import PorterStemmer
+  
+
+nltk.download('punkt')
 
 cList = {
   "ain't": "am not",
@@ -173,10 +175,10 @@ def clean_tweets(tweets):
             tweet = ' '.join(re.sub("([^0-9A-Za-z \t])", " ", tweet).split())
 
             # stop words
-            stop_words = set(stopwords.words('english'))
-            word_tokens = nltk.word_tokenize(tweet)
+            # stop_words = set(stopwords.words('english'))
+            # word_tokens = nltk.word_tokenize(tweet)
             # filtered_sentence = [w for w in word_tokens if not w in stop_words]
-            # tweet = ' '.join(filtered_sentence)
+            # tweet = ' '.join(word_tokens)
 
             # stemming words
             # tweet = PorterStemmer().stem(tweet)
@@ -185,13 +187,14 @@ def clean_tweets(tweets):
 
     return cleaned_tweets
 
-from flask import Flask, render_template, request
+import uvicorn
+from fastapi import FastAPI
 
-app = Flask(__name__)
-@app.route('/predict', methods=['GET', 'POST'])
-def predict_sentiment():
-  text_data = request.get_data()
-  clean_data = clean_tweets(text_data)
+app = FastAPI()
+
+@app.get('/predict')
+def predict_sentiment(text:str):
+  clean_data = clean_tweets([text])
 
   #predict
   pred_sentiment = model.predict(clean_data)
@@ -199,8 +202,8 @@ def predict_sentiment():
     sentiment = 'depressed'
   else:
     sentiment = 'not depressed'
-  result = {"prediction": sentiment}
+  result = {
+            "prediction": sentiment,
+            "confidence": pred_sentiment.item()
+            }
   return result
-
-if __name__ == '__main__':
-  app.run(debug=True, port=8000) #use_reloader=False

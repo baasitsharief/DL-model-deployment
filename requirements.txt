@@ -1,0 +1,14 @@
+tensorflow-cpu==2.9.1
+tf-models-official
+ftfy
+tensorflow-hub
+tensorflow-text
+streamlit
+requests
+aiohttp[speedups]
+nltk
+flask
+twint
+tweepy
+fastapi
+uvicorn
