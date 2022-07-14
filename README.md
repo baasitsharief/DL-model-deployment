@@ -1,5 +1,7 @@
 # DL-model-deployment
 
+FastAPI based DL Model deployment with a minimalistic frontend using streamlit
+
 Model and Dataset - https://drive.google.com/drive/folders/1XYGrlyJjjw2QtIZm3Vk3EQ-NLbv8UE7k?usp=sharing
 
 # Running backend
